@@ -111,3 +111,11 @@ Specializing in n8n infrastructure, CRM sync, and AI-driven workflows.
 
 - 🔗 [Upwork Profile](https://www.upwork.com/freelancers/~0108dfb61b408b16b2)
 - 💼 [LinkedIn](https://linkedin.com/in/eugene-bondarenko-887351370)
+- Before importing:
+
+1. Replace YOUR_FACEBOOK_ACCESS_TOKEN_HERE
+2. Replace YOUR_THREADS_ACCESS_TOKEN_HERE
+3. Replace YOUR_GOOGLE_SHEETS_ID_HERE
+4. Replace YOUR_CREDENTIAL_ID
+5. Configure Anthropic/OpenAI credentials
+6. Configure Telegram credentials
