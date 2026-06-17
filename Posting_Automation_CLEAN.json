@@ -1,0 +1,1682 @@
+{
+  "name": "Posting Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "=define",
+        "text": "={{ $json.contentSnippet || $json.content || $json.summary || $json.description || $json.title }}",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "=Ти — практикуючий маркетолог з автоматизації бізнесу.\nЧитаєш будь-яку бізнес або наукову статтю і знаходиш\nв ній зв'язок з маркетингом, автоматизацією процесів\nта B2B продажами.\n\nТвій кут зору завжди: як ця інформація впливає на\nмаркетинг і автоматизацію бізнесу клієнтів.\n\nНавіть якщо стаття про ланцюги постачання — ти пишеш\nпро те як автоматизація маркетингу допомагає бізнесу\nадаптуватись до цих змін швидше за конкурентів.\n\nВХІДНІ ДАНІ:\nЗаголовок: {{ $json.title }}\nТекст: {{ $json.content || $json.contentSnippet }}\nURL: {{ $json.link }}\n\nЗАВДАННЯ: Створи 3 постів на основі цього матеріалу.\n\nВидай ТІЛЬКИ валідний JSON (без ```json, без пояснень) Текст статті може містити HTML - ігноруй теги, використовуй тільки чистий текст:\n{\n  \n  \"facebook_ua\": \"400-800 симв. Почни з сильного гачка - факт або цифра зі статті що шокує або дивує. Потім розкажи що це означає для бізнесу на конкретному прикладі. Додай 2-3 практичних інсайти зі стрілками →. Закінчуй провокаційним питанням до аудиторії. Жива розмовна мова. БЕЗ хештегів.\",\n  \"instagram_ua\": \"650-800 симв. Коротко перекажи суть статті простими словами — що відбувається і чому це важливо для бізнесу. Потім один практичний висновок що з цим робити. Живий розмовний стиль без жаргону. Закінчуй фразою: Пишіть в директ якщо потрібна консультація з автоматизації. 10-15 хештегів українською.\",\n  \"threads_ua\": \"200-400 симв. ПЕРШЕ РЕЧЕННЯ — провокаційне твердження або несподіваний факт який змушує зупинитись. Без питань на початку. Потім 1-2 речення особистої думки практика. Легкий розмовний тон як розмова з другом про бізнес. Без жаргону і технічних термінів. 5-7 хештегів\",\n  \"image_keyword\": \"business professional strategy meeting\"\n}\n\nФОРМАТУВАННЯ — КРИТИЧНО:\n- Один \\n між абзацами БЕЗ порожніх рядків\n- Максимум 1 емодзі на весь пост тільки в гачку\n- Стрілки → замість буліт-поінтів\n- Пиши як людина яка реально розбирається в темі\n- БЕЗ кліше типу \"в сучасному світі\", \"як ніколи раніше\"\n- - БЕЗ згадки Lagom Agency або будь-якої власної компанії. Джерела статей згадувати можна\n- Факти зі статті позначай як факти\n- Власні висновки подавай як \"це означає що\" або \"для вашого бізнесу\" \n- ЗАБОРОНЕНО використовувати довге тире — (em dash). Тільки короткий дефіс - (hyphen)\n- НЕ включай URL або гіперпосилання в текст постів\n- Якщо згадуєш джерело — пиши тільки назву (наприклад: \"за даними HubSpot\" а не посилання)"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        464,
+        -64
+      ],
+      "id": "23d332e6-5d45-43fa-880f-631d4814f7ed",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "person": "YOUR_LINKEDIN_PERSON_ID_HERE",
+        "text": "={{ $('Code in JavaScript 2').first().json.linkedin_en }}\n\n\n\n{{ $('Code in JavaScript 2').first().json.linkedin_ua }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {
+          "visibility": "PUBLIC"
+        }
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        -816
+      ],
+      "id": "2dbcde75-8c23-4700-8241-8202417f5e18",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "=llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        944,
+        112
+      ],
+      "id": "66109029-d9d8-4b84-8190-d2f45f746e3f",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $node[\"Basic LLM Chain\"].json[\"text\"] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an Unsplash query generator for a marketing automation agency.\nReturn ONLY a valid JSON object. Nothing else.\n\nRules:\n- Query must be 3-5 words in English\n- NEVER use words: photography, photo, camera, render, people, person, team, man, woman, face, meeting\n- Always about: modern office space, desk setup, laptop closeup, technology, workspace, minimalist interior\n- POV / first-person angle preferred\n- Realistic, clean, modern aesthetic\n- Always about: modern office space, desk setup, laptop closeup, technology, workspace, minimalist interior, coffee shop work, notebook pen desk, business chart screen, phone on desk, keyboard closeup, monitor screen glow\n\nExample outputs:\n{\"unsplash_query\": \"modern minimalist office desk\"}\n{\"unsplash_query\": \"laptop screen analytics dashboard\"}\n{\"unsplash_query\": \"clean workspace coffee laptop\"}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        880,
+        -64
+      ],
+      "id": "22a6b85d-7f70-48ea-bea4-831edb73ae1b",
+      "name": "Basic LLM Chain Pexels"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9,
+              "triggerAtMinute": 25
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -592,
+        -64
+      ],
+      "id": "d939074f-ca68-401d-87c4-3ca058693127",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        -64
+      ],
+      "id": "0e71722c-1045-4e15-983c-f10594a95c11",
+      "name": "RSS Read",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-6",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        112
+      ],
+      "id": "7d4c36eb-dd16-4dd8-a5e0-9fa3a52b8f3b",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "list",
+          "cachedResultName": "n8n Bot",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEETS_URL_HERE"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "posting date",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEETS_URL_HERE"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -128,
+        -272
+      ],
+      "id": "50e4bd6e-751f-430d-91a1-0c32818dc3de",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Code in JavaScript 2').item.json.facebook_ua }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "71ab44a9-96f9-4d06-9d2c-9459e1afa007"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Facebook"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5e6ffd82-6b9f-4b35-8135-957c5f38a95c",
+                    "leftValue": "={{ $('Code in JavaScript 2').item.json.instagram_ua }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "instagram"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ce005f20-7f92-4e0c-929b-282e72a2bdd3",
+                    "leftValue": "={{ $('Code in JavaScript 2').item.json.threads_ua }}",
+                    "rightValue": "threads_ua",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "threads"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        -80
+      ],
+      "id": "179688d5-ba19-4943-b727-0f07f5b55b65",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "987984d0-d4be-41bb-b8da-bdd7c282f38a",
+              "name": "text ",
+              "value": "={{ $('Code in JavaScript 2').first().json.facebook_ua }}",
+              "type": "string"
+            },
+            {
+              "id": "a6181bff-da01-4d61-b697-1f48f45f7862",
+              "name": "photo_url",
+              "value": "={{ $input.item.json.photos[Math.floor(Math.random() * Math.min($input.item.json.photos.length, 10))].src.large }}",
+              "type": "string"
+            },
+            {
+              "id": "df4fd9e2-997e-4981-9717-d5444dee324c",
+              "name": "page_id",
+              "value": "YOUR_FACEBOOK_PAGE_ID_HERE",
+              "type": "string"
+            },
+            {
+              "id": "ca564111-fad5-4308-821a-10071e3634c3",
+              "name": "access_token",
+              "value": "YOUR_FACEBOOK_PAGE_TOKEN_HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        -192
+      ],
+      "id": "9e87b7f6-f6d9-4287-b5dd-ea6f5a316a9b",
+      "name": "Edit Fields Facebook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eee2b83e-028c-4a7f-b6f4-3d65bea9f1d4",
+              "name": "text",
+              "value": "={{ $('Code in JavaScript 2').first().json.instagram_ua }}",
+              "type": "string"
+            },
+            {
+              "id": "2b2cb5a6-024b-4303-ae11-35b7cbcc2dec",
+              "name": "photo_url",
+              "value": "={{ $input.item.json.photos[Math.floor(Math.random() * Math.min($input.item.json.photos.length, 10))].src.large }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        -16
+      ],
+      "id": "fba26774-4772-4156-99bf-69ffa3a0e3c6",
+      "name": "Edit Fields Instagram"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ff97d37a-cdc3-444b-939b-7d832c4b991d",
+              "name": "text",
+              "value": "={{ $('Code in JavaScript 2').first().json.threads_ua }}",
+              "type": "string"
+            },
+            {
+              "id": "11aaad52-e61f-4b52-870f-808f78b8f7fa",
+              "name": "photo_url",
+              "value": "={{ $input.item.json.photos[Math.floor(Math.random() * Math.min($input.item.json.photos.length, 10))].src.large }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        160
+      ],
+      "id": "170ea3d2-082c-4ff4-ae02-25bbf4739b6e",
+      "name": "Edit Fields threads UA"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID_1_HERE",
+        "file": "={{ $('Edit Fields Facebook').first().json.photo_url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1728,
+        -192
+      ],
+      "id": "88deb9df-5ffe-4865-9a1a-69a239b32100",
+      "name": "Send a photo message1",
+      "webhookId": "c2d5e932-35c4-4bb2-835e-9cd58a4b7351",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID_2_HERE",
+        "file": "={{ $json.photo_url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1840,
+        -816
+      ],
+      "id": "24e670f6-7c8a-44f2-817e-9b76e5f9ddaf",
+      "name": "Send a photo message2",
+      "webhookId": "6017c708-18e5-43e0-888d-f5b0d8267bed",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID_3_HERE",
+        "file": "={{ $json.photo_url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1728,
+        -16
+      ],
+      "id": "a4385913-60fd-4b40-85f0-cde389272432",
+      "name": "Send a photo message3",
+      "webhookId": "0deb1048-e7d4-495d-aaac-edb850aae914",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID_4_HERE",
+        "file": "={{ $json.photo_url }}",
+        "additionalFields": {
+          "caption": "={{ $json.text }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1760,
+        160
+      ],
+      "id": "0c692e84-c000-41f7-8a0b-cb3a80e84a58",
+      "name": "Send a photo message4",
+      "webhookId": "c9ae494b-6513-4fd6-b464-e23c63558143",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc55c149-8542-4f04-b568-d40d669efed2",
+              "name": "text",
+              "value": "={{ JSON.parse($('Basic LLM Chain1').item.json.text.replace(/```json\\n?|```/g, '').trim()).linkedin_en }}\n",
+              "type": "string"
+            },
+            {
+              "id": "1c32edd6-aec1-498a-ae00-79a9bb525752",
+              "name": "photo_url",
+              "value": "={{ $input.first().json.photos[0].src.large }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        -800
+      ],
+      "id": "4df4aa65-249f-465d-8e32-b70874801d3e",
+      "name": "Edit Fields Linkedin UA&EN"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID_2_HERE",
+        "text": "={{ $('Code in JavaScript 2').first().json.linkedin_en }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1984,
+        -816
+      ],
+      "id": "53bc9799-fabf-4d6c-acf0-0c3b85e7e060",
+      "name": "Send a text message1",
+      "webhookId": "eaf56bfc-54d5-450e-afd9-532189434180",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID_2_HERE",
+        "text": "={{ $('Code in JavaScript 2').first().json.linkedin_ua }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2112,
+        -816
+      ],
+      "id": "94102d32-b8a4-43bd-aced-9fc761831705",
+      "name": "Send a text message2",
+      "webhookId": "0fde7db3-00b1-4a03-9b09-799ec1dd3758",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID_1_HERE",
+        "text": "={{ $('Code in JavaScript 2').first().json.facebook_ua }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        -192
+      ],
+      "id": "67acfa22-df1b-4aa2-b3d6-187ce8817159",
+      "name": "Send a text message3",
+      "webhookId": "da058ef9-ad89-45ff-875a-570d6f3cb1db",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -64
+      ],
+      "id": "5bd81776-d8cb-45df-9906-4c3d75bd4ad6",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "325cdba5-d1fb-45b7-ac75-4556503593a7",
+              "leftValue": "={{ new Date().getDay() }}",
+              "rightValue": "1",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "0f3e3553-3f33-4817-989f-c9bc67db12ad",
+              "leftValue": "={{ new Date().getDay() }}",
+              "rightValue": "3",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "d04cac19-5e92-4d07-b351-4b71561cd5ce",
+              "leftValue": "={{ new Date().getDay() }}",
+              "rightValue": "5",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -800
+      ],
+      "id": "0287ec8b-cc83-433b-967b-c0b73735b59c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        -816
+      ],
+      "id": "2dbd2f6d-e07f-4175-8b7f-862b63985238",
+      "name": "Wait",
+      "webhookId": "e6e2ad1c-bc2b-441c-9e67-8c6e0abe22de"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/YOUR_FACEBOOK_PAGE_ID_HERE/photos",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{$('Code in JavaScript 2').first().json.facebook_ua}}"
+            },
+            {
+              "name": "url",
+              "value": "={{$('Edit Fields Facebook').first().json.photo_url}}"
+            },
+            {
+              "name": "=access_token",
+              "value": "YOUR_FACEBOOK_ACCESS_TOKEN_HERE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2256,
+        -192
+      ],
+      "id": "42f7d10e-8d59-4158-ad7c-695c504fc164",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pexels.com/v1/search?query={{ JSON.parse($json.text).unsplash_query.replace(/ /g,'+') }}&per_page=15&page={{ Math.floor(Math.random()*5)+1 }}",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\"Authorization\": \"YOUR_PEXELS_API_KEY_HERE\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1152,
+        -64
+      ],
+      "id": "bfece339-c198-4567-b1a3-ff1d7685fcd7",
+      "name": "HTTP Request "
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v23.0",
+        "node": "YOUR_FACEBOOK_PAGE_ID_HERE",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        2416,
+        -192
+      ],
+      "id": "058f61ea-4c30-443f-9d1f-2fa63f6b9de2",
+      "name": "Facebook Graph API",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2080,
+        -192
+      ],
+      "id": "fcedbfc6-ef23-4690-83bf-927e3c508317",
+      "name": "Wait1",
+      "webhookId": "d030bdd1-2df1-4ab1-aa05-aab641d9b959"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Edit Fields Linkedin UA&EN').first().json.photo_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2352,
+        -816
+      ],
+      "id": "fb1cf58d-8e8a-40de-8927-e97ca2a08e27",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0/YOUR_INSTAGRAM_ACCOUNT_ID_HERE/media",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "image_url",
+              "value": "={{$('Edit Fields Instagram').first().json.photo_url}}"
+            },
+            {
+              "name": "caption",
+              "value": "={{$('Edit Fields Instagram').first().json.text}}"
+            },
+            {
+              "name": "access_token",
+              "value": "YOUR_FACEBOOK_ACCESS_TOKEN_HERE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2096,
+        -16
+      ],
+      "id": "79c5f62b-1a0f-4349-97f9-7a6322f4637b",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0/YOUR_INSTAGRAM_ACCOUNT_ID_HERE/media_publish",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{$json.id}}"
+            },
+            {
+              "name": "access_token",
+              "value": "YOUR_FACEBOOK_ACCESS_TOKEN_HERE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2416,
+        -16
+      ],
+      "id": "83c07b3f-583b-46cd-b280-b77ecbdf3eea",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2256,
+        -16
+      ],
+      "id": "9fffdba2-757d-4081-ab8e-76acee87309a",
+      "name": "Wait2",
+      "webhookId": "e6e2ad1c-bc2b-441c-9e67-8c6e0abe22de"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID_3_HERE",
+        "text": "={{ $('Edit Fields Instagram').first().json.text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        -16
+      ],
+      "id": "8413e710-df45-4227-a3b1-bffa717b1afa",
+      "name": "Send a text message4",
+      "webhookId": "70de04f9-f235-44f0-807f-89251ce5dc69",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "792011c7-cb3a-48e0-ad31-133dd0f304b3",
+              "leftValue": "={{ $('Get row(s) in sheet').all().map(item => item.json.URL) }}",
+              "rightValue": "={{ $json.link }}",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        -64
+      ],
+      "id": "7168574b-1bbd-471c-b1a2-744e1d129334",
+      "name": "Filter",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "list",
+          "cachedResultName": "n8n Bot",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEETS_URL_HERE"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "posting date",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEETS_URL_HERE"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "URL": "={{ $('RSS Read').item.json.link }}",
+            "Title": "={{ $('RSS Read').item.json.title }}",
+            "Source": "={{ $('Code in JavaScript 1').item.json.source }}",
+            "Published Date": "={{ $('RSS Read').item.json.pubDate }}",
+            "Status": "posted"
+          },
+          "matchingColumns": [
+            "URL"
+          ],
+          "schema": [
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn ",
+              "displayName": "LinkedIn ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "YOUR_CREDENTIAL_ID",
+              "displayName": "Facebook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "YOUR_CREDENTIAL_ID",
+              "displayName": "Instagram",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Threads",
+              "displayName": "Threads",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Key Fact",
+              "displayName": "Key Fact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Published Date",
+              "displayName": "Published Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notes ",
+              "displayName": "Notes ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        -256
+      ],
+      "id": "081d4153-0a01-4874-bedf-266e5d875603",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "pubDate",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        112,
+        -64
+      ],
+      "id": "dd31384f-cd65-4fd6-9b9b-f517fc10b3ac",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "promptType": "=define",
+        "text": "={{ $('Limit').item.json.contentSnippet || $('Limit').item.json.title }}",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "=Ти - практикуючий маркетолог з автоматизації бізнесу.\nЧитаєш будь-яку бізнес або наукову статтю і знаходиш\nв ній зв'язок з маркетингом, автоматизацією процесів\nта B2B продажами.\n\nТвій кут зору завжди: як ця інформація впливає на\nмаркетинг і автоматизацію бізнесу клієнтів.\n\nНавіть якщо стаття про ланцюги постачання — ти пишеш\nпро те як автоматизація маркетингу допомагає бізнесу\nадаптуватись до цих змін швидше за конкурентів.\n\nВХІДНІ ДАНІ:\nЗаголовок: {{ $('Limit').item.json.title }}\nТекст: {{ $('Limit').item.json.content || $('Limit').item.json.contentSnippet }}\nURL: {{ $('Limit').item.json.link }}\n\nЗАВДАННЯ: Створи 5 постів на основі цього матеріалу.\n\nВидай ТІЛЬКИ валідний JSON (без ```json, без пояснень):\n{\n  \"linkedin_en\": \"1800-2200 chars. Hook (fact/number from article) → What this means for business → 3-5 insights with → arrows → Strong question to audience.  NO company promo. End with question. 3-5 hashtags #automation #B2Bmarketing\",\n  \"linkedin_ua\": \"1800-2200 симв. Гачок (факт/цифра зі статті) → Що це означає для бізнесу → 3-5 інсайтів зі стрілками → → Сильне питання до аудиторії.  БЕЗ реклами себе. Закінчуй питанням. 3-5 хештегів #автоматизація #B2Bмаркетинг\",\n \n  \"image_keyword\": \"business professional strategy meeting\"\n}\n\nФОРМАТУВАННЯ — КРИТИЧНО:\n- Один \\n між абзацами БЕЗ порожніх рядків\n- Максимум 1 емодзі на весь пост тільки в гачку\n- Стрілки → замість буліт-поінтів\n- Пиши як людина яка реально розбирається в темі\n- БЕЗ кліше типу \"в сучасному світі\", \"як ніколи раніше\"\n- БЕЗ згадки Lagom Agency або будь-якої компанії\n- Факти зі статті позначай як факти\n- Власні висновки подавай як \"це означає що\" або \"для вашого бізнесу\" \n- Використовуй тільки короткий дефіс - а не довгий тире — або пунктир"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1568,
+        -816
+      ],
+      "id": "33b8f064-1a9b-4b39-b214-f6f31a16bed1",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-6",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1552,
+        -672
+      ],
+      "id": "16f42116-9ac7-4a19-a6c3-9b7f575b9d7a",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.threads.net/v1.0/YOUR_THREADS_ACCOUNT_ID_HERE/threads",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "IMAGE"
+            },
+            {
+              "name": "image_url",
+              "value": "={{ $('Edit Fields threads UA').item.json.photo_url }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Edit Fields threads UA').item.json.text }}"
+            },
+            {
+              "name": "access_token",
+              "value": "YOUR_THREADS_ACCESS_TOKEN_HERE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1936,
+        160
+      ],
+      "id": "cd50d456-473b-4ac8-ad3e-7b282a821389",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.threads.net/v1.0/YOUR_THREADS_ACCOUNT_ID_HERE/threads_publish",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "access_token",
+              "value": "YOUR_THREADS_ACCESS_TOKEN_HERE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2128,
+        160
+      ],
+      "id": "54046f55-36a3-4ddb-bfd5-afde11ffaf98",
+      "name": "HTTP Request5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sources = [\n  { url: \"https://techcrunch.com/feed/\", source: \"TechCrunch\", lang: \"en\" },\n  { url: \"https://www.theverge.com/rss/index.xml\", source: \"The Verge\", lang: \"en\" },\n  { url: \"https://www.wired.com/feed/rss\", source: \"Wired\", lang: \"en\" },\n  { url: \"https://blog.n8n.io/rss\", source: \"n8n Blog\", lang: \"en\" },\n  { url: \"https://venturebeat.com/feed/\", source: \"VentureBeat\", lang: \"en\" },\n  { url: \"https://blog.hubspot.com/marketing/rss.xml\", source: \"HubSpot\", lang: \"en\" },\n  { url: \"https://www.searchenginejournal.com/feed/\", source: \"Search Engine Journal\", lang: \"en\" },\n  { url: \"https://www.socialmediatoday.com/feeds/news/\", source: \"Social Media Today\", lang: \"en\" },\n  { url: \"https://blog.hootsuite.com/feed/\", source: \"Hootsuite\", lang: \"en\" },\n  { url: \"https://www.inc.com/rss/\", source: \"Inc Magazine\", lang: \"en\" },\n  { url: \"https://hbr.org/feed\", source: \"HBR\", lang: \"en\" },\n  { url: \"https://techcrunch.com/category/artificial-intelligence/feed/\", source: \"TechCrunch AI\", lang: \"en\" },\n  { url: \"https://zapier.com/blog/feeds/latest/\", source: \"Zapier Blog\", lang: \"en\" },\n  { url: \"https://www.marktechpost.com/feed/\", source: \"MarkTechPost\", lang: \"en\" },\n  { url: \"https://marketingtechnews.net/feed/\", source: \"MarketingTech News\", lang: \"en\" }\n  ];\nreturn sources.map(s => ({ json: s }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        -64
+      ],
+      "id": "0d3a0c07-62fd-498e-86fd-a04f3664583f",
+      "name": "Code in JavaScript 1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $input.first().json.text;\nconst clean = text.replace(/```json\\n?|```/g, '').replace(/[\\u0000-\\u001F\\u007F]/g, ' ').trim();\ntry {\n  return [{ json: JSON.parse(clean) }];\n} catch(e) {\n  return [{ json: { error: e.message, raw: text } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        -64
+      ],
+      "id": "7f861175-938a-4a89-84bf-602cebc69cc2",
+      "name": "Code in JavaScript 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sheetTitles = $('Get row(s) in sheet').all()\n  .map(item => item.json.Title ? item.json.Title.substring(0, 30).toLowerCase().trim() : '');\n\nconst sevenDaysAgo = Date.now() - (2 * 24 * 60 * 60 * 1000);\n\nreturn $input.all().filter(item => {\n  const title = item.json.title ? item.json.title.substring(0, 30).toLowerCase().trim() : '';\n  const isDuplicate = sheetTitles.some(t => t && title && t === title);\n  const pubDate = item.json.pubDate || item.json['Published Date'] || item.json.isoDate || null;\n  const isRecent = pubDate ? new Date(pubDate).getTime() > sevenDaysAgo : true;\n  return !isDuplicate && isRecent;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -64
+      ],
+      "id": "2e07387b-7097-47aa-9704-2df270dd7178",
+      "name": "Code in JavaScript "
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain Pexels",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain Pexels": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields threads UA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields Facebook": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields Instagram": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields threads UA": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a photo message1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a photo message2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a photo message3": {
+      "main": [
+        [
+          {
+            "node": "Send a text message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a photo message4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields Linkedin UA&EN": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message3": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message2": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request ": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a post": {
+      "main": [
+        []
+      ]
+    },
+    "Facebook Graph API": {
+      "main": [
+        []
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript 1": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript 2": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain Pexels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript ": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Kyiv",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "def6ede3-bb27-4d78-aa78-8a4dc0d2be2c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5d91c3a183d9dd37e08452cd431c278b6d3d29f2678698bff78608dbd221f0fd"
+  },
+  "id": "YOUR_WORKFLOW_ID_HERE",
+  "tags": []
+}
